@@ -1,0 +1,24 @@
+---
+title: "Raman Data Processing"
+subtitle: "Data from Pikes Peak and Mt. Evans"
+author: "Rachel Havranek"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output: 
+  html_document:
+    toc: yes
+---
+
+```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
+# load libraries
+library(tidyverse) 
+library(latex2exp)
+library (plotly)
+
+# global knitting options for automatic saving of all plots as .png and .pdf
+knitr::opts_chunk$set(
+  dev = c("png", "pdf"), fig.keep = "all",
+  dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
+  fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
+)
+```
+

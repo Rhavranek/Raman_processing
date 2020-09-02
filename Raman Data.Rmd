@@ -1,0 +1,932 @@
+---
+title: "Raman Plots"
+author: "Rachel Havranek"
+date: "10/28/2017"
+output: html_document
+---
+Load libraries and the multiplot function from the R cookbook
+```{r load libraries and multiplot function, message=FALSE}
+library(grid)
+library(tidyverse)
+library(plotly)
+library(latex2exp)
+
+# Multiple plot function
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+
+  numPlots = length(plots)
+
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                    ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+
+ if (numPlots==1) {
+    print(plots[[1]])
+
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+Load data, and separte the data from each elevation into its own data frame so that it can be compared later 
+```{r load-data, message=FALSE}
+Pikes_Data <- read_csv("~/Documents/MSc Publication Work /R work/PP_raman_data.csv", 
+    col_types = cols(grain = col_character()))
+
+#Filter by elevation
+PP2084<-filter(Pikes_Data, Sample_Name == "PP2084")
+PP2907<-filter(Pikes_Data, Sample_Name =="PP2907")
+PP3971<-filter(Pikes_Data, Sample_Name =="PP3971")
+
+Mount_Evans <- read_csv("~/Documents/MSc Publication Work /R work/ME_Raman Data.csv") 
+
+#Mount_Evans <-  Mount_Evans %>% mutate(
+ # Sample.id = if(Sample_Name == "ME10") {"ME1"} "ME1","other") else
+#)
+
+#Filter each elevation
+ME1<-filter(Mount_Evans, Sample_Name == "ME10")
+ME2<-filter(Mount_Evans, Sample_Name =="ME8")
+ME4<-filter(Mount_Evans, Sample_Name =="ME1")
+
+Nasdala<-read_csv("~/Documents/MSc Publication Work /R work/Nasdala.csv")
+
+legend_title<-"Sample" 
+```
+
+Plot the Pikes data:
+1. by all data
+2. By each elevation, without grains separated
+3. By elevation, with grains separated by color 
+```{r Plot Pikes Data}
+####All Data####
+PP_Raman<-ggplot () +  
+  geom_point(data=Pikes_Data, aes(x=raman_shift, y=FWHM, fill=Sample_Name),  pch=22, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#d73027", "#fee090" ,  "#91bfdb")) +
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+    
+ggsave("Pikes Raman.pdf", width=2, height=2, units = "in") 
+
+PP_2084_Raman<-ggplot () +  
+  geom_point(data=PP2084, aes(x=raman_shift, y=FWHM, fill=Sample_Name),  pch=22, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#d73027")) +
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("PP_2084.pdf", width=2, height=2, units = "in") 
+
+PP_2907_Raman<-ggplot () +  
+  geom_point(data=PP2907, aes(x=raman_shift, y=FWHM, fill=Sample_Name),  pch=22, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#fee090")) +
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("PP_2907.pdf", width=2, height=2, units = "in")
+
+PP3971_Raman<-ggplot () +  
+  geom_point(data=PP3971, aes(x=raman_shift, y=FWHM, fill=Sample_Name),  pch=22, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#91bfdb")) +
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("PP_3971.pdf", width=2, height=2, units = "in")
+
+bygrain_2084<-ggplot(PP2084)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =5)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 1" ) +
+  scale_x_continuous(limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+  
+bygrain_2907<-ggplot(PP2907)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =5)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 3" ) +
+  scale_x_continuous(limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+bygrain_3971<-ggplot(PP3971)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =5)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 5" ) +
+  scale_x_continuous(limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size =8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+#ggsave("2084_grain.pdf", bygrain_2084, width = 4, height =3, units = "in", dpi=300)
+#ggsave("2907_grain.pdf", bygrain_2907, width = 4, height =3, units = "in", dpi=300)
+#ggsave("3971_grain.pdf", bygrain_3971, width = 4, height =3, units = "in", dpi=300)
+
+####Subplot 2084####
+#Break the 2084 into three separate groups to plot
+PP2084_1<- filter(PP2084, grain=="1"|grain=="2"|grain=="4"|grain=="6"|grain=="7"|grain=="8"|grain=="9"|grain=="10"|grain=="11"|grain=="12"|grain=="13"|grain=="14"|grain=="15"|grain=="16"|grain=="17"|grain=="18"|grain=="18"|grain=="19"|grain=="20"|grain=="22" )
+PP2084_2<-filter(PP2084, grain=="23"|grain=="24"|grain=="25"|grain=="26"|grain=="28"|grain=="29"|grain=="30"|grain=="31")
+PP2084_3<-filter(PP2084, grain=="32"| grain=="33" |grain=="34"|grain=="35"|grain=="36")
+
+bygrain_2084_1<-ggplot(PP2084_1)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 1" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")+
+      guides(fill=guide_legend(ncol=2))
+
+ggsave("2084_grain_1.pdf", bygrain_2084_1, width = 4.5, height =4, units = "in", dpi=300)
+
+bygrain_2084_2<-ggplot(PP2084_2)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 1" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("2084_grain_2.pdf", bygrain_2084_2, width = 4, height =4, units = "in", dpi=300)
+
+
+bygrain_2084_3<-ggplot(PP2084_3)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 1" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("2084_grain_3.pdf", bygrain_2084_3, width = 4, height =4, units = "in", dpi=300)
+
+####Subplot 2907####
+#PP2907 broken into 2 groups
+PP2907_1<-filter(PP2907, grain<=24)
+PP2907_2<-filter(PP2907, grain>24)
+
+bygrain_2907_1<-ggplot(PP2907_1)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 3" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("2907_grain_1.pdf", bygrain_2907_1, width = 4, height =4, units = "in", dpi=300)
+
+bygrain_2907_2<-ggplot(PP2907_2)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 3" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("2907_grain_2.pdf", bygrain_2907_2, width = 4, height =4, units = "in", dpi=300)
+
+####Subplot 3971####
+#PP3971 broken into 2 groups 
+PP3971_1<-filter(PP3971, grain=="1"|grain=="2"|grain=="3"|grain=="5"|grain=="6"|grain=="8"|grain=="9"|grain=="10"|grain=="13"|grain=="14")
+PP3971_2<-filter(PP3971, grain=="15"|grain=="16"|grain=="17"|grain=="19"|grain=="24"|grain=="26"|grain=="29"|grain=="30"|grain=="32")
+
+bygrain_3971_1<-ggplot(PP3971_1)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 5" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("3971_grain_1.pdf", bygrain_3971_1, width = 4, height =4, units = "in", dpi=300)
+
+bygrain_3971_2<-ggplot(PP3971_2)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "Pikes Peak 5" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 12),
+      panel.border = element_rect(fill="NA", colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+ggsave("3971_grain_2.pdf", bygrain_3971_2, width = 4, height =4, units = "in", dpi=300)
+
+```
+
+Plot the Evans data:
+1. by all data
+2. By each elevation, without grains separated
+3. By elevation, with grains separated by color
+```{r Plot Mt Evans Data}
+###Plot all data as FWHM vs. Shift####
+ME_Raman <-ggplot () +  
+  geom_point(data=Mount_Evans, aes(x=raman_shift, y=FWHM, fill= Sample_Name), pch=24, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#2c7bb6", "#d7191c" , "#fdae61")) + 
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "Mount Evans") +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 8)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+
+ggsave("Mt Evans raman.pdf", width=2, height = 2, units = "in") 
+
+ME1_Raman <-ggplot () +  
+  geom_point(data=ME1, aes(x=raman_shift, y=FWHM, fill= Sample_Name), pch=24, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#2c7bb6")) + 
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "Mount Evans") +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 8)) +
+  theme_classic()+
+  theme(
+  panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("ME1 raman.pdf", width=2, height = 2, units = "in")
+
+
+ME2_Raman <-ggplot () +  
+  geom_point(data=ME2, aes(x=raman_shift, y=FWHM, fill= Sample_Name), pch=24, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c("#d7191c")) + 
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "Mount Evans") +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 8)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("ME2 raman.pdf", width=2, height = 2, units = "in") 
+
+
+ME4_Raman <-ggplot () +  
+  geom_point(data=ME4, aes(x=raman_shift, y=FWHM, fill= Sample_Name), pch=24, size=2)  +
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM)) +
+  scale_fill_manual(legend_title, values = c( "#fdae61")) + 
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "Mount Evans") +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 8)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggsave("ME4 raman.pdf", width=2, height = 2, units = "in") 
+
+
+####Lowest Elevation - plot all, and break up data set into two plots for clarity####
+bygrain_ME1<-ggplot(ME1)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =3)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "ME 1" ) +
+  scale_x_continuous(limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 10),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+Me1third<-filter(ME1, grain=="Z01" | grain== "Z02" | grain== "Z03" | grain=="Z04" | grain=="Z05" | grain== "Z06" | grain== "Z07" | grain=="Z08") 
+
+bygrain_ME1_1third<-ggplot(Me1third)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), pch=24, size =1)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME 1" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me1_1_3rd.pdf", width=2.6, height = 2, units = "in") 
+
+
+ME1_2third<-filter(ME1, grain=="Z09" | grain=="Z10" | grain=="Z11" | grain=="Z12" | grain=="Z13" |grain=="z14"| grain=="z15"| grain=="z16" | grain=="z17")
+
+ME1_2third_plot<-ggplot(ME1_2third)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), pch=24, size =1)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME 1" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+
+ggsave("Me1_2_3rd.pdf", width=2.6, height = 2, units = "in", dpi=300)
+
+ME1_3third <- filter(ME1, grain=="z21"|grain=="z22"|grain=="z23"|grain=="z24"|grain=="z26"|grain=="z27"|grain=="z28"|grain=="z30"|grain=="z32")
+
+ME1_3third_plot<-ggplot(ME1_3third)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), pch=24, size =1)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME 1" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me1_3_3rd.pdf", width=2.6, height = 2, units = "in", dpi=300)
+
+
+
+####ME_2 all grains adn broken into two plots for clarity#### 
+bygrain_ME2<-ggplot(ME2)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =3)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "ME2" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    text = element_text(size = 10),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+Me2_1third<-filter(ME2, grain=="Z01" | grain== "Z12" | grain== "Z13" | grain=="Z14" | grain=="Z15" | grain== "Z16" | grain== "Z17" ) 
+
+ME2_2third <- filter(ME2, grain=="Z18"| grain=="Z19"| grain=="Z20" | grain=="Z21" | grain=="Z22" | grain== "Z23" | grain== "Z24") 
+
+Me2_3third <-filter(ME2,grain=="Z25" | grain=="Z26" | grain== "Z27" | grain== "Z28" | grain=="Z29"| grain=="Z3"| grain=="Z4" | grain=="Z8") 
+
+ME2_1_third<-ggplot(Me2_1third)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=24, size =1)+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME2" ) +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me2_1_3rd.pdf", width=2.6, height = 2, units = "in") 
+
+ME2_2_third<-ggplot(ME2_2third)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=24, size =1)+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME2") +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me2_2_3rd.pdf", width=2.6, height = 2, units = "in") 
+
+ME2_3_third<-ggplot(Me2_3third )+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=24, size =1)+
+  labs(x="Raman Shift (cm-1)", y = "FWHM (cm-1)", title = "ME2") +
+  scale_x_continuous(expand=c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me2_3_3rd.pdf", width=2.6, height = 2, units = "in") 
+
+
+####Summit plots####
+bygrain_ME4<-ggplot(ME4)+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), color="black", pch=22, size =2)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "ME4" ) +
+  scale_x_continuous(limits=c(994,1008), breaks=seq(994, 1008, 2)) +
+  scale_y_continuous(limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(text = element_text(size = 10),
+      #panel.border = element_rect(colour = "black", size = 1),
+      legend.text = element_text(size = 8), 
+      axis.text = element_text(color = "black")) +
+      guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+      theme(plot.title = element_text(size = 20, hjust = 0.5)) +
+      guides(color="legend", legend.position="bottom")
+
+
+Me4_1third<-filter(ME4, grain=="Z4" | grain== "Z5" | grain== "Z6" | grain=="Z7" | grain=="8"| grain=="9" | grain=="Z10" )
+Me4_2third<-filter(ME4,  grain== "Z12" | grain== "Z13" | grain=="Z16" | grain=="Z19" |  grain== "Z21" | grain== "Z22" ) 
+Me4_3third<-filter(ME4,  grain=="Z23"| grain=="Z24" | grain=="Z29" | grain== "Z30" | grain=="Z31" | grain=="Z32" ) 
+
+ME4_1_third<-ggplot(Me4_1third)+
+   geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain), pch=24, size =1)+
+  labs(x="Raman Shift (cm-1)", y = "FWHM", title = "ME2" ) +
+  scale_x_continuous(expand=c(0,0),  limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand=c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me4_1_3rd.pdf", width=2.6, height = 2, units = "in") 
+  
+ME4_2_third<-ggplot(Me4_2third)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain),  pch=24, size =1)+
+  labs(x="Raman Shift ", y = "FWHM", title = "ME4" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me4_2_3rd.pdf", width=2.6, height = 2, units = "in")    
+
+ME4_3_third<-ggplot(Me4_3third)+
+  geom_line(data=Nasdala, aes(x=Nasdala_shift, y=Nasdala_FWHM))+
+  geom_point(aes(x=raman_shift, y=FWHM, fill=grain),  pch=24, size =1)+
+  labs(x="Raman Shift (1/cm)", y = "FWHM (1/cm)", title = "ME4" ) +
+  scale_x_continuous(expand = c(0,0), limits=c(994,1008), breaks=seq(994, 1008, 4)) +
+  scale_y_continuous(expand = c(0,0), limits = c(0,36), breaks=seq(0, 36, 6)) +
+  theme_classic()+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=8),
+    axis.title.y= element_text(face="bold", size=8),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 6), 
+    plot.title = element_text(size = 10, hjust = 0.5))
+ggsave("Me4_3_3rd.pdf", width=2.6, height = 2, units = "in") 
+
+
+```
+
+
+
+Quantitatively summarize the Pikes Peak Data, and write to csv 
+```{r}
+PP2084_raman_flatlist <- PP2084 %>% group_by(grain)%>%
+  summarize(
+    Sample="PP1",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+   
+
+PP2907_raman_flatlist <- PP2907%>% group_by(grain)%>%
+  summarize(
+    Sample="PP3",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+
+PP3971_raman_flatlist <- PP3971%>% group_by(grain)%>%
+  summarize(
+    Sample="PP5",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+
+PP_fwhm_sd <- ggplot(PP2084_raman_flatlist)+geom_density(aes(FWHM_sd, colour='PP1')) +geom_density( data = PP2907_raman_flatlist, aes(FWHM_sd, colour='PP3')) +geom_density(data = PP3971_raman_flatlist, aes(FWHM_sd, colour="PP5"))
+
+PP_range <- ggplot(PP2084_raman_flatlist)+geom_density(aes(FWHM_range, colour='PP1')) +geom_density( data = PP2907_raman_flatlist, aes(FWHM_range, colour='PP3')) +geom_density(data = PP3971_raman_flatlist, aes(FWHM_range, colour="PP5"))
+
+
+
+PP_raman_flatlist <- rbind(PP2084_raman_flatlist, PP2907_raman_flatlist, PP3971_raman_flatlist)
+write_csv(PP_raman_flatlist, "PP_raman_flatlist.csv")
+```
+
+Quantitatively summarize the Mount Evans Data, and write to csv 
+```{r}
+ME1_raman_flatlist <- ME1 %>% group_by(grain)%>%
+  summarize(
+    Sample="ME1",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+
+ME2_raman_flatlist <- ME2 %>% group_by(grain)%>%
+  summarize(
+    Sample="ME2",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+
+ME4_raman_flatlist <- ME4 %>% group_by(grain)%>%
+  summarize(
+    Sample="ME4",
+    FWHM_max=max(FWHM),
+    FHWM_min=min(FWHM),
+    FWHM_range=max(FWHM)-min(FWHM),
+    FWHM_mean=mean(FWHM),
+    FWHM_median = median (FWHM),
+    FWHM_sd=sd(FWHM),
+    RS_max=max(raman_shift),
+    RS_min=min(raman_shift),
+    RS_range=max(raman_shift)-min(raman_shift),
+    RS_mean=mean(raman_shift),
+    RS_sd=sd(raman_shift)
+  )
+
+
+ME_fwhm_sd <- ggplot(ME1_raman_flatlist)+geom_density(aes(FWHM_sd, colour='ME1')) +geom_density( data = ME2_raman_flatlist, aes(FWHM_sd, colour='ME2')) +geom_density(data = ME4_raman_flatlist, aes(FWHM_sd, colour="ME4"))
+
+ME_range <- ggplot(ME1_raman_flatlist)+geom_density(aes(FWHM_range, colour='ME1')) +geom_density( data = ME2_raman_flatlist, aes(FWHM_range, colour='ME2')) +geom_density(data = ME4_raman_flatlist, aes(FWHM_range, colour="ME4"))
+
+
+ME_raman_flatlist <- rbind(ME1_raman_flatlist, ME2_raman_flatlist, ME4_raman_flatlist)
+write_csv(ME_raman_flatlist, "ME_raman_flatlist.csv")
+```
+
+
+
+
+Below makes the histograms and kernal density estimations of my data. This was to help me visualize overall trends between the elevations. The populations from Pikes Peak appear to be statistically identical, where as the populations from Evans show increasing radiation damage(increarse in FWHM) with elevation. This is not going into the paper because we are unable to disentangle the contribution of increased time in the PAZ vs. uranium concentration (we do not have any U-Th data for the evans grains that were mounted). 
+```{r histograms of data}
+PP_raman_hist<-ggplot()+
+  geom_histogram(data=Pikes_Data, 
+                 aes(x=FWHM, fill=Sample_Name), 
+                 stat = "bin", 
+                 binwidth=1,
+                 position="dodge") +
+  scale_x_continuous(limits=c(0,36), breaks=seq(0, 36, 6)) +
+  scale_y_continuous(limits = c(0,10), breaks=seq(0, 10, 2)) +
+  theme_classic()
+
+PP_KDE<-ggplot(data=Pikes_Data)+
+  geom_density(aes(x=FWHM, color=Sample_Name))+
+  scale_fill_manual(legend_title, values = c("yellow" , "yellowgreen" ,  "blue2"))+
+  theme_classic()
+
+PP_violin <- Pikes_Data %>% 
+  ggplot()+
+    geom_violin(aes(Sample_Name, FWHM, fill = Sample_Name), scale = "count", draw_quantiles = c(0.25, 0.5, 0.75))+
+
+    scale_fill_manual(values = c("#000004", "#7D2482", "#FD9A6A"))+
+    scale_y_continuous(expand = c(0,0), limits = c(0,36))+
+    ylab(TeX('$\\FWHM (cm^{-1})')) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+print(PP_violin)
+
+ggsave("PP_violin.pdf", width = 4, height = 3, units = "in")
+
+ME_raman_hist<-ggplot()+
+  geom_histogram(
+    data=Mount_Evans, 
+    aes(x=FWHM, fill=Sample_Name), 
+    stat = "bin", 
+    binwidth = 1, 
+    position="dodge")+
+  scale_x_continuous(limits=c(0,36), breaks=seq(0, 36, 6)) +
+  scale_y_continuous(limits = c(0,70), breaks=seq(0, 70, 20)) +
+  theme_classic()
+
+ME_KDE<-ggplot(data=Mount_Evans)+
+  geom_density(aes(x=FWHM, color=Sample_Name))+
+  theme_classic()
+
+ME_violin <- Mount_Evans %>% 
+  filter(Sample_Name != "NA") %>% 
+  ggplot()+
+    geom_violin(aes(Sample_Name, FWHM, fill = Sample_Name), scale = "count", na.rm = TRUE, draw_quantiles = c(0.25, 0.5, 0.75))+
+    scale_fill_manual(values = c("#FDE0A1", "#782281", "#EA5661"))+
+    scale_y_continuous(expand = c(0,0), limits = c(0,36))+
+    ylab(TeX('$\\FWHM (cm^{-1})')) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+
+print(ME_violin)
+
+ggsave("ME_violin.pdf", width = 4, height = 3, units = "in")
+
+```
+
+
+```{r}
+ME_081920 <- ME_raman_flatlist %>% 
+  ggplot()+
+  geom_point(aes(FWHM_median, FWHM_sd, fill = Sample), pch=24, size=4)+
+  scale_fill_manual(values = c("#782281", "#EA5661", "#FDE0A1"))
+ME_081920
+
+PP_081920 <- PP_raman_flatlist %>% 
+  ggplot()+
+  geom_point(aes(FWHM_median, FWHM_sd, fill = Sample), pch=22, size=4)+
+  scale_fill_manual(values = c("#000004", "#7D2482", "#FD9A6A"))
+PP_081920
+
+PP_090220 <- PP_raman_flatlist %>% filter (Sample == "PP1") %>% 
+  ggplot()+
+  geom_point(aes(FWHM_median, FWHM_sd, fill = Sample), pch=0, size=4)
+ggplotly(PP_090220)
+
+```
+
+
+
+
+
+
+
+
+
+Multiplots
+```{r}
+allPikes<-multiplot(PP_Raman, PP_raman_hist, PP_KDE, cols=3)
+allME<-multiplot(ME_Raman, ME_raman_hist, ME_KDE, cols=3)
+```
+
+
+```{r}
+ggplotly(PP_raman_hist)
+ggplotly(PP_KDE)
+ggplotly(ME_raman_hist)
+ggplotly(ME_KDE)
+```
+
+```{r}
+ggsave("PP_raman_hist.pdf", PP_raman_hist, width=4, height = 3, units = "in", dpi = 300)
+ggsave("ME_Raman_hist.pdf", ME_raman_hist, width=4, height = 3, units = "in", dpi = 300)
+```
+
