@@ -7,12 +7,13 @@ output:
   html_document:
     toc: yes
 ---
-
+# Loading libraries & data, and adding some metadata
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
 # load libraries
 library(tidyverse) 
 library(latex2exp)
 library (plotly)
+source(file.path("scripts", "Custom_functions.R"))
 
 # global knitting options for automatic saving of all plots as .png and .pdf
 knitr::opts_chunk$set(
@@ -20,5 +21,55 @@ knitr::opts_chunk$set(
   dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
   fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
 )
+```
+
+```{r load all data}
+pikes_data <- read_csv("data/PP_raman_data.csv")
+evans_data <- read_csv("data/ME_Raman Data.csv")
+Nasdala_idealized_line <- read_csv("data/Nasdala.csv")
+```
+
+Modify the sample names for ease of reading, where PP stands for Pikes Peak, ME stands for Mt. Evans. Samples are numbered from 1 - 6 with the lowest elevation sample being 1 and highest elevation sample being. 
+```{r modify sample names}
+pikes_data <- pikes_data %>% 
+    mutate (
+      Peak = "Pikes Peak",
+      papername = 
+        ifelse(Sample_Name == "PP2084", "PP1", #If True, add label PP2
+          ifelse( Sample_Name == "PP2479", "PP2", #If True, add label PP2
+            ifelse (Sample_Name == "PP2907", "PP3", #If true, add label PP3
+              ifelse (Sample_Name == "PP3597", "PP4", #If true, add label PP4
+                ifelse (Sample_Name == "PP3971", "PP5", "PP6")     #if true, add label PP5, ELSE add the label PP6
+                    )      
+                  )
+                )
+              )
+    )
+
+evans_data <- evans_data %>% mutate(
+  Peak = "Mount Evans",
+  papername = ifelse (Sample_Name == "ME10", "ME1_2872",
+                ifelse (Sample_Name == "ME8", "ME2_3596", 
+                  ifelse (Sample_Name == "ME3", "ME3_3978",  
+                          "ME4_4345")
+                )
+              )
+            )
+```
+
+# Some very light statistics
+This chunk uses the raman_summary function that can be found in the scripts folder in the "Custom Functions.R" file 
+```{r}
+pikes_flatlist <- pikes_data %>% 
+  group_by(papername, grain) %>% 
+  raman_summary()
+
+evans_flatlist <- evans_data %>% 
+  group_by(papername, grain) %>% 
+  raman_summary()
+
+view(evans_flatlist)
+
+
 ```
 
