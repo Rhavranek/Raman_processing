@@ -368,4 +368,28 @@ pikesbygrain_subplot7
 
 
 ## Other figures 
+#### Comparing Raman data and CL data
+```{r}
+PP_CL_raman_summ <-  pikes_flatlist %>% 
+  filter (papername == "PP1") %>% 
+  filter (grain > 31) %>% 
+  ggplot() +
+  geom_point(aes(FWHM_median, FWHM_sd, fill = grain, label=grain))
+
+ggplotly(CL_raman_summ)
+
+CL_raman <- pikes_data %>% 
+  filter (papername == "PP1") %>% 
+  filter (grain == 32 | grain == 33 | grain == 36) %>% 
+  ggplot() +
+  geom_point(aes(raman_shift, FWHM, color= as.character(grain), label=grain))+
+  geom_line(data=Nasdala_idealized_line, aes(x=Nasdala_shift, y=Nasdala_FWHM))
+
+ggplotly(CL_raman)
+```
+
+```{r}
+me_cl_raman_summ <- evans_flatlist %>% 
+  filter(papername == "ME2_3596" & grain == "z29" )
+```
 
