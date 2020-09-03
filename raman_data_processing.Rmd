@@ -10,9 +10,9 @@ output:
 # Loading libraries & data, and adding some metadata
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
 # load libraries
-library(tidyverse) 
+library(tidyverse)
 library(latex2exp)
-library (plotly)
+library(plotly)
 source(file.path("scripts", "Custom_functions.R"))
 
 # global knitting options for automatic saving of all plots as .png and .pdf
@@ -63,13 +63,309 @@ This chunk uses the raman_summary function that can be found in the scripts fold
 pikes_flatlist <- pikes_data %>% 
   group_by(papername, grain) %>% 
   raman_summary()
+view(pikes_flatlist)
 
 evans_flatlist <- evans_data %>% 
   group_by(papername, grain) %>% 
   raman_summary()
 
 view(evans_flatlist)
+```
 
+# Main text figures
+```{r figure 2}
+#Figure 2a
+evans_violin <- evans_data %>% 
+  filter(papername != "NA") %>% 
+  ggplot()+
+    geom_violin(aes(papername, FWHM, fill = Sample_Name), scale = "count", na.rm = TRUE, draw_quantiles = c(0.25, 0.5, 0.75))+
+    scale_fill_manual(values = c("#FDE0A1", "#782281", "#EA5661"))+
+    scale_y_continuous(expand = c(0,0), limits = c(0,36))+
+    ylab(TeX('$\\FWHM (cm^{-1})')) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+print(evans_violin)
+
+#Figure 2b
+evans_grain_summary <- evans_flatlist %>% filter(papername != "NA") %>% 
+  ggplot()+
+  geom_point(aes(FWHM_median, FWHM_sd, fill = papername), pch=24, size=4)+
+  scale_fill_manual(values = c("#782281", "#EA5661", "#FDE0A1"))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,12))+
+    xlab(TeX("median value of of FWHM $\\(cm^{-1})$"))+
+    ylab(TeX("standard deviation of FWHM $\\(cm^{-1})$")) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+evans_grain_summary
+
+#Figure 2c
+pikes_violin <- pikes_data %>% 
+  ggplot()+
+    geom_violin(aes(papername, FWHM, fill = papername), scale = "count", draw_quantiles = c(0.25, 0.5, 0.75))+
+    scale_fill_manual(values = c("#000004", "#7D2482", "#FD9A6A"))+
+    scale_y_continuous(expand = c(0,0), limits = c(0,36))+
+    ylab(TeX('$\\FWHM (cm^{-1})')) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+print(pikes_violin)
+
+#Figure 2d
+pikes_grain_summary <- pikes_flatlist %>% filter(papername != "NA") %>% 
+  ggplot()+
+  geom_point(aes(FWHM_median, FWHM_sd, fill = papername), pch=22, size=4)+
+  scale_fill_manual(values = c("#000004", "#7D2482", "#FD9A6A"))+scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,12))+
+    xlab(TeX("median value of of FWHM $\\(cm^{-1})$"))+
+    ylab(TeX("standard deviation of FWHM $\\(cm^{-1})$")) +
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      legend.position = "none", 
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+pikes_grain_summary
+```
+
+# Supplementary text figures
+
+#### Figure S3
+```{r figure S3, echo = FALSE}
+evans_bygrain_subplot1 <- evans_data %>% 
+  filter (papername == "ME1_2872") %>% 
+  filter (grain=="Z01" | grain== "Z02" | grain== "Z03" | grain=="Z04" | grain=="Z05" | grain== "Z06" | grain== "Z07" | grain=="Z08")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME1")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot2 <- evans_data %>% 
+  filter (papername == "ME1_2872") %>% 
+  filter (grain=="Z09" | grain=="Z10" | grain=="Z11" | grain=="Z12" | grain=="Z13" |grain=="z14"| grain=="z15"| grain=="z16" | grain=="z17")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME1")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot3 <- evans_data %>% 
+  filter (papername == "ME1_2872") %>% 
+  filter (grain=="z21"|grain=="z22"|grain=="z23"|grain=="z24"|grain=="z26"|grain=="z27"|grain=="z28"|grain=="z30"|grain=="z32")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME1")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+
+evans_bygrain_subplot4 <- evans_data %>% 
+  filter (papername == "ME2_3596") %>% 
+  filter (grain=="Z01" | grain== "Z12" | grain== "Z13" | grain=="Z14" | grain=="Z15" | grain== "Z16" | grain== "Z17")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME2")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot5 <- evans_data %>% 
+  filter (papername == "ME2_3596") %>% 
+  filter (grain=="Z18"| grain=="Z19"| grain=="Z20" | grain=="Z21" | grain=="Z22" | grain== "Z23" | grain== "Z24")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME2")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot6 <- evans_data %>% 
+  filter (papername == "ME2_3596") %>% 
+  filter (grain=="Z25" | grain=="Z26" | grain== "Z27" | grain== "Z28" | grain=="Z29"| grain=="Z3"| grain=="Z4" | grain=="Z8")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME2")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot7 <- evans_data %>% 
+  filter (papername == "ME4_4345") %>% 
+  filter (grain=="Z4" | grain== "Z5" | grain== "Z6" | grain=="Z7" | grain=="8"| grain=="9" | grain=="Z10")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME4")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot8 <- evans_data %>% 
+  filter (papername == "ME4_4345") %>% 
+  filter (grain== "Z12" | grain== "Z13" | grain=="Z16" | grain=="Z19" |  grain== "Z21" | grain== "Z22")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME4")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot9 <- evans_data %>% 
+  filter (papername == "ME4_4345") %>% 
+  filter (grain=="Z23"| grain=="Z24" | grain=="Z29" | grain== "Z30" | grain=="Z31" | grain=="Z32")%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "ME4")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+
+evans_bygrain_subplot1
+evans_bygrain_subplot2
+evans_bygrain_subplot3
+evans_bygrain_subplot4
+evans_bygrain_subplot5
+evans_bygrain_subplot6
+evans_bygrain_subplot7
+evans_bygrain_subplot8
+evans_bygrain_subplot9
 
 ```
+
+
+#### Figure S4 
+```{r figure S4}
+pikes_bygrain_subplot1 <- pikes_data %>% 
+  filter (papername == "PP1") %>% 
+  filter (grain <= 22)%>% 
+          raman_bygrain_figure()+ 
+          labs(title = "PP1")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+            
+pikes_bygrain_subplot2 <- pikes_data %>% 
+  filter (papername == "PP1") %>%
+  filter (grain > 22 & grain <=31) %>% 
+        raman_bygrain_figure()+
+          labs(title = "PP1")+
+          theme_figure()+
+          guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+           color="legend", 
+           legend.position="bottom",
+           fill=guide_legend(ncol=2))
+    
+
+pikes_bygrain_subplot3 <- pikes_data %>% 
+  filter (papername == "PP1") %>% 
+  filter (grain > 31) %>%
+    raman_bygrain_figure()+ 
+    labs(title = "PP1")+
+    theme_figure()+
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+            color="legend", 
+            legend.position="bottom",
+            fill=guide_legend(ncol=2))
+        
+pikesbygrain_subplot4 <- pikes_data %>% 
+  filter (papername == "PP3") %>% 
+  filter( grain <= 24) %>% 
+    raman_bygrain_figure()+
+    labs(title = "PP3")+
+    theme_figure()+
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+            color="legend", 
+            legend.position="bottom",
+            fill=guide_legend(ncol=2))
+
+pikesbygrain_subplot5 <- pikes_data %>% 
+  filter (papername == "PP3") %>% 
+  filter( grain > 24) %>% 
+    raman_bygrain_figure()+ 
+    labs(title = "PP3")+
+    theme_figure()+
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+            color="legend", 
+            legend.position="bottom",
+            fill=guide_legend(ncol=2))
+
+pikesbygrain_subplot6 <- pikes_data %>% 
+  filter (papername == "PP5") %>% 
+  filter( grain <= 14) %>% 
+    raman_bygrain_figure()+
+    labs(title = "PP5")+
+    theme_figure()+
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+            color="legend", 
+            legend.position="bottom",
+            fill=guide_legend(ncol=2))
+
+pikesbygrain_subplot7 <- pikes_data %>% 
+  filter (papername == "PP5") %>% 
+  filter( grain > 14) %>% 
+    raman_bygrain_figure()+
+    labs(title = "PP5")+
+    theme_figure()+
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2),
+            color="legend", 
+            legend.position="bottom",
+            fill=guide_legend(ncol=2))
+
+pikes_bygrain_subplot1
+pikes_bygrain_subplot2
+pikes_bygrain_subplot3
+pikesbygrain_subplot4
+pikesbygrain_subplot5
+pikesbygrain_subplot6
+pikesbygrain_subplot7
+```
+
+
+## Other figures 
 
