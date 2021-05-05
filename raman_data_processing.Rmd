@@ -27,6 +27,8 @@ knitr::opts_chunk$set(
 pikes_data <- read_csv("data/PP_raman_data.csv")
 evans_data <- read_csv("data/ME_Raman Data.csv")
 Nasdala_idealized_line <- read_csv("data/Nasdala.csv")
+pikes_zhe <- read_csv("data/Pikes_Data_for_R .csv")
+
 ```
 
 Modify the sample names for ease of reading, where PP stands for Pikes Peak, ME stands for Mt. Evans. Samples are numbered from 1 - 6 with the lowest elevation sample being 1 and highest elevation sample being. 
@@ -55,6 +57,20 @@ evans_data <- evans_data %>% mutate(
                 )
               )
             )
+
+pikes_zhe <- pikes_zhe %>% mutate (
+      Peak = "Pikes Peak",
+      papername = 
+        ifelse(Sample == "PP2084", "PP1", #If True, add label PP2
+          ifelse( Sample == "PP2479", "PP2", #If True, add label PP2
+            ifelse (Sample == "PP2907", "PP3", #If true, add label PP3
+              ifelse (Sample == "PP3597", "PP4", #If true, add label PP4
+                ifelse (Sample == "PP3971", "PP5", "PP6")     #if true, add label PP5, ELSE add the label PP6
+                    )      
+                  )
+                )
+              )
+    )
 ```
 
 # Some very light statistics
@@ -71,6 +87,29 @@ evans_flatlist <- evans_data %>%
 
 view(evans_flatlist)
 ```
+
+```{r}
+dated_grains <- pikes_flatlist %>% 
+  filter (papername == "PP1") %>% 
+  filter (grain == 23 | grain == 31 | grain == 32 | grain == 33 | grain == 36) %>% 
+  select (grain, FWHM_median, FWHM_sd) 
+
+
+
+dated_grains <- dated_grains %>% 
+  bind_rows(
+    pikes_flatlist %>%
+      filter (papername == "PP3") %>% 
+      filter (grain == 17 | grain == 21 | grain == 27) %>% 
+        select (grain, FWHM_median, FWHM_sd) 
+)
+
+dated_grains %>% ggplot() + aes (FWHM_median, FWHM_sd, color = papername) + geom_point() + theme_figure() + scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,12))
+```
+
+
+
 
 # Main text figures
 ```{r figure 2}
@@ -144,6 +183,7 @@ pikes_grain_summary <- pikes_flatlist %>% filter(papername != "NA") %>%
   geom_point(aes(FWHM_median, FWHM_sd, fill = papername), pch=22, size=4)+
   scale_fill_manual(values = c("#000004", "#7D2482", "#FD9A6A"))+scale_x_continuous(expand = c(0,0), limits = c(0,36))+
   scale_y_continuous(expand = c(0,0), limits = c(0,12))+
+  geom_point(data = dated_grains, aes( FWHM_median, FWHM_sd), color = "white", pch =16, size =1) +
     xlab(TeX("median value of of FWHM $\\(cm^{-1})$"))+
     ylab(TeX("standard deviation of FWHM $\\(cm^{-1})$")) +
     theme_classic()+
@@ -366,8 +406,152 @@ pikesbygrain_subplot6
 pikesbygrain_subplot7
 ```
 
+## Figure S6
+```{r}
+#PP1 
+PP1_zhe <- pikes_zhe %>% 
+  mutate (
+    fullname = paste(papername, Grain)
+  ) %>% 
+    filter(fullname == "PP1 z23" | fullname == "PP1 z31" | fullname == "PP1 z32" | fullname == "PP1 z33" | fullname == "PP1 z36")
 
-## Other figures 
+PP1_raman <- pikes_data %>% 
+  filter(papername == "PP1") %>% 
+    mutate( 
+      Grain = 
+        ifelse(grain == "23", "z23",
+          ifelse(grain == 31, "z31",
+            ifelse(grain == 32, "z32",
+              ifelse(grain == 33, "z33", 
+                ifelse(grain== 36, "z36", NA
+                )     
+              )    
+            )
+          )
+        )
+      ) %>% 
+        mutate (fullname = paste(papername, Grain)) %>% 
+          filter(fullname == "PP1 z23" | fullname == "PP1 z31" | fullname == "PP1 z32" | fullname == "PP1 z33" | fullname == "PP1 z36") 
+
+PP1_all <- left_join(PP1_raman, PP1_zhe, by = "fullname")
+
+
+PP1_zhevsFWHM <- PP1_all %>% ggplot()+
+  aes(x = FWHM, y = Corr_Date, shape = fullname, fill = Sample) +
+  geom_point(size = 4)+
+  scale_shape_manual(values = c(21, 22, 23, 24, 25))+
+  scale_fill_manual(values = c("#000004"))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,800))+
+  xlab(TeX('$\\FWHM (cm^{-1})')) +
+  ylab ("Zhe Date (Ma)")+
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+print(PP1_zhevsFWHM)
+
+PP1_eUvsFWHM <- PP1_all %>% ggplot()+
+  aes(x = FWHM, y = eU, shape = fullname, fill = Sample) +
+  geom_point(size = 4)+
+  scale_shape_manual(values = c(21, 22, 23, 24, 25))+
+  scale_fill_manual(values = c("#000004"))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,800))+
+  xlab(TeX('$\\FWHM (cm^{-1})')) +
+  ylab ("Zhe eU (ppm)")+
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+print(PP1_eUvsFWHM)
+
+#PP3
+PP3_zhe <- pikes_zhe %>% 
+  mutate (
+    fullname = paste(papername, Grain)
+  ) %>% 
+    filter(fullname == "PP3 z17" | fullname == "PP3 z21" | fullname == "PP3 z27") 
+
+PP3_raman <- pikes_data %>% 
+  filter(papername == "PP3") %>% 
+    mutate( 
+      Grain = 
+        ifelse(grain == "17", "z17",
+          ifelse(grain == 21, "z21",
+            ifelse(grain == 27, "z27", NA
+            )
+              
+          )     
+        )    
+      ) %>% 
+        mutate (fullname = paste(papername, Grain)) %>% 
+          filter(fullname == "PP3 z17" | fullname == "PP3 z21" | fullname == "PP3 z27")  
+
+PP3_all <- left_join(PP3_raman, PP3_zhe, by = "fullname")
+
+
+PP3_zhevsFWHM <- PP3_all %>% ggplot()+
+  aes(x = FWHM, y = Corr_Date, shape = fullname, fill = Sample) +
+  geom_point(size = 4)+
+  scale_shape_manual(values = c( 22,  24, 25))+
+  scale_fill_manual(values = c("#7D2482"))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,800))+
+  xlab(TeX('$\\FWHM (cm^{-1})')) +
+  ylab ("Zhe Date (Ma)")+
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+print(PP3_zhevsFWHM)
+
+PP3_eUvsFWHM <- PP3_all %>% ggplot()+
+  aes(x = FWHM, y = eU, shape = fullname, fill = Sample) +
+  geom_point(size = 4)+
+  scale_shape_manual(values = c( 22,  24, 25))+
+  scale_fill_manual(values = c("#7D2482"))+
+  scale_x_continuous(expand = c(0,0), limits = c(0,36))+
+  scale_y_continuous(expand = c(0,0), limits = c(0,800))+
+  xlab(TeX('$\\FWHM (cm^{-1})')) +
+  ylab ("Zhe eU (ppm)")+
+    theme_classic()+
+    theme(
+      panel.border=element_rect(fill=NA,size = 1),
+      text = element_text(size = 12),
+      axis.ticks = element_line(color="black"),
+      axis.line = element_line(color = NA),
+      axis.text.y = element_text(color = "black", size = 12),
+      axis.text.x = element_text (color = "black", size = 12),
+      axis.title.x = element_blank()
+    )
+
+print(PP3_eUvsFWHM)
+```
+
+
+# Other figures 
 #### Comparing Raman data and CL data
 ```{r}
 PP_CL_raman_summ <-  pikes_flatlist %>% 
@@ -376,7 +560,7 @@ PP_CL_raman_summ <-  pikes_flatlist %>%
   ggplot() +
   geom_point(aes(FWHM_median, FWHM_sd, fill = grain, label=grain))
 
-ggplotly(CL_raman_summ)
+ggplotly(PP_CL_raman_summ)
 
 CL_raman <- pikes_data %>% 
   filter (papername == "PP1") %>% 

@@ -214,6 +214,7 @@ bygrain_3971<-ggplot(PP3971)+
 ####Subplot 2084####
 #Break the 2084 into three separate groups to plot
 PP2084_1<- filter(PP2084, grain=="1"|grain=="2"|grain=="4"|grain=="6"|grain=="7"|grain=="8"|grain=="9"|grain=="10"|grain=="11"|grain=="12"|grain=="13"|grain=="14"|grain=="15"|grain=="16"|grain=="17"|grain=="18"|grain=="18"|grain=="19"|grain=="20"|grain=="22" )
+
 PP2084_2<-filter(PP2084, grain=="23"|grain=="24"|grain=="25"|grain=="26"|grain=="28"|grain=="29"|grain=="30"|grain=="31")
 PP2084_3<-filter(PP2084, grain=="32"| grain=="33" |grain=="34"|grain=="35"|grain=="36")
 
